@@ -3,7 +3,7 @@ require('dotenv').config()
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-async function verify(token) {
+exports.googleVerifyToken = async function(token) {
     try {
         const ticket = await client.verifyIdToken({
             idToken: token,
@@ -16,5 +16,3 @@ async function verify(token) {
         return;
     }
 };
-
-module.exports = { verify }

@@ -12,7 +12,12 @@ const UserSchema = new Schema({
         type: String,
         enum: ['male', 'female'],
     },
-    avatar: { type: String }
+    avatar: { type: String },
+    role: {
+        type: String,
+        enum: ["user", "admin", "superadmin"],
+        default: "user"
+    }
 }, { timestamps: true })
 
 

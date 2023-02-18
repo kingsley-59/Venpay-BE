@@ -1,4 +1,4 @@
-const { verify } = require("../middlewares/googleAuth")
+const { googleVerifyToken } = require("../middlewares/googleAuth")
 const { request, response } = require('express');
 const { badRequestResponse, successResponse, errorResponse, notFoundResponse } = require("../helpers/apiResponse");
 const UserModel = require("../models/userSchema");
@@ -20,9 +20,10 @@ const generateOTP = () => {
  */
 exports.googleVerify = async (req, res) => {
     try {
-        const payload = await verify(req.body.token);
+        const payload = await googleVerifyToken(req.body.token);
         if (payload) {
             // token is valid
+            console.log(payload);
             res.json({ user: payload });
         } else {
             res.status(401).json({ error: 'Invalid token' });
@@ -83,7 +84,7 @@ exports.login = async (req, res) => {
         const passwordIsValid = compare(password, user.password);
         if (!passwordIsValid) return badRequestResponse(res, 'password does not match this email');
 
-        const token = sign({id: user._id, email: user.email}, process.env.JWT_SECRET, { expiresIn: '3d' })
+        const token = sign({id: user._id, email: user.email, role: user.role}, process.env.JWT_SECRET, { expiresIn: '3d' })
 
         successResponse(res, {user: {...user, password: ''}, token});
     } catch (error) {
@@ -91,20 +92,3 @@ exports.login = async (req, res) => {
     }
 }
 
-/**
- * 
- * @param {request} req 
- * @param {response} res 
- */
-exports.updateProfile = async (req, res) => {
-    const { lastName, firstName, phoneNumber } = req.body;
-
-    try {
-        if (firstName?.length < 3 || lastName?.length < 3) return badRequestResponse(res, 'first and last name must be 3 or more characters.');
-
-        const updatedUser = await UserModel.findByIdAndUpdate(req.user.id, {...req.body}, {new: true});
-        return successResponse(res, {...updatedUser, password: ''})
-    } catch (error) {
-        errorResponse(res, error);
-    }
-}
