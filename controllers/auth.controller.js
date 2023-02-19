@@ -4,6 +4,7 @@ const { badRequestResponse, successResponse, errorResponse, notFoundResponse } =
 const UserModel = require("../models/userSchema");
 const { hash, compare } = require("bcrypt");
 const { sign } = require("jsonwebtoken");
+const WalletModel = require("../models/WalletSchema");
 
 
 const generateOTP = () => {
@@ -61,7 +62,9 @@ exports.register = async (req, res) => {
             firstName, lastName, email, phoneNumber, password: passwordHash, gender
         })
 
-        successResponse(res, {...newUser, password: ''});
+        const newWallet = await WalletModel.create({owner: newUser._id});
+
+        successResponse(res, {...newUser, password: '', wallet: newWallet});
     } catch (error) {
         errorResponse(res, error);
     }

@@ -3,13 +3,14 @@ const { Schema, model } = require("mongoose");
 
 const WalletSchema = new Schema({
     owner: { type: Schema.Types.ObjectId, ref: 'User' },
-    accountName: {type: String },
-    balanace: {type: Number, default: 0},
+    accountName: { type: String },
+    accountNumber: { type: Number },
+    balanace: { type: Number, default: 0 },
 }, { timestamps: true });
 
 
 // Set the default account name to be the concatenation of the user's first and last name
-WalletSchema.pre('save', async function(next) {
+WalletSchema.pre('save', async function (next) {
     if (this.isNew || this.isModified('owner')) {
         const user = await model('User').findById(this.owner);
         if (user) {
@@ -23,4 +24,5 @@ WalletSchema.pre('save', async function(next) {
 });
 
 
-module.exports = model('Wallet', WalletSchema);
+const WalletModel = model('Wallet', WalletSchema);
+module.exports = WalletModel

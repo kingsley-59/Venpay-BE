@@ -41,6 +41,7 @@ exports.getUserById = async (req, res) => {
  */
 exports.updateProfile = async (req, res) => {
     const { lastName, firstName, phoneNumber } = req.body;
+    if (req.user.id !== req.params.id) return badRequestResponse('Unauthorized! Id does not match the user.');
 
     try {
         if (firstName?.length < 3 || lastName?.length < 3) return badRequestResponse(res, 'first and last name must be 3 or more characters.');
@@ -60,10 +61,13 @@ exports.updateProfile = async (req, res) => {
 exports.deleteUser = async (req, res) => {
     const { id, role } = req.user;
     const userId = req.params.id;
+    if (req.user.id !== req.params.id) return badRequestResponse('Unauthorized! Id does not match the user.');
 
     try {
-        
+        const deletedUser = await UserModel.findByIdAndDelete(id, {new: true});
+
+        return successResponse(res, {message: "User deletd successfully.", deletedUser})
     } catch (error) {
-        
+        errorResponse(res, error);
     }
 };
