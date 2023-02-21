@@ -1,56 +1,6 @@
 const { Schema, model } = require("mongoose");
 
 
-const WalletTxnsSchema = new Schema({
-    sender: {
-        type: Schema.Types.ObjectId,
-        required: true
-    },
-    recipient: {
-        type: Schema.Types.ObjectId,
-        required: true
-    },
-    status: {
-        type: String,
-        enum: ['success', 'fail', 'pending'],
-        required: true
-    },
-    message: {
-        type: String,
-    }
-}, { timestamps: true });
-
-
-const BankTxnsSchema = new Schema({
-    bank: {
-        type: String,
-        required: true
-    },
-    accountName: {
-        type: String,
-        required: true,
-    },
-    accountNumber: {
-        type: Number,
-        required: true,
-    },
-    status: {
-        type: String,
-        enum: ['success', 'fail', 'pending'],
-        required: true
-    },
-    channel: {
-        type: String,
-        enum: ['transfer', 'card'],
-        default: ['transfer'],
-        required: true
-    },
-    card: {
-        type: Object
-    },
-}, { timestamps: true });
-
-
 const TransactionSchema = new Schema({
     type: {
         type: String,
@@ -74,6 +24,7 @@ const TransactionSchema = new Schema({
 }, { timestamps: true });
 
 
+// automatically set a transaciton as debit or credit
 TransactionSchema.pre('save', function (next) {
     if (this.type === 'top_up' || this.type === 'receive_money') {
         this.transactionType = 'credit';
@@ -83,16 +34,5 @@ TransactionSchema.pre('save', function (next) {
     next();
 });
 
-WalletTxnsSchema.post('update', async function () {
-    const transaction = this.getQuery()._id;
-    await TransactionModel.updateMany({ details: transaction }, { $currentDate: { updatedAt: true } });
-});
 
-
-const WalletTxnsModel = model('WalletTransactions', WalletTxnsSchema);
-const BankTxnsModel = model('BankTransactions', BankTxnsSchema);
-const TransactionModel = model('Transactions', TransactionSchema);
-
-module.exports = {
-    WalletTxnsModel, BankTxnsModel, TransactionModel
-}
+exports.TransactionModel = model('Transactions', TransactionSchema);
