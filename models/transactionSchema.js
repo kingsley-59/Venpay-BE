@@ -12,15 +12,20 @@ const TransactionSchema = new Schema({
         enum: ['credit', 'debit'],
         required: true,
     },
-    amount: {
-        type: Number,
+    status: {
+        type: String,
+        enum: ['success', 'failed', 'pending'],
         required: true
     },
-    details: {
-        type: Schema.Types.ObjectId,
-        ref: ['WalletTransactions', 'BankTransactions'],
-        required: true
-    }
+    amount: { type: Number, required: true },
+
+    senderAcctName: { type: String, required: true },
+    senderAcctNumber: { type: Number, required: true },
+    senderBank: { type: String, required: true, },
+    recipientName: { type: String, required: true },
+    recipientAcctNumber: { type: Number, required: true },
+    recipientBank: { type: String, required: true },
+    
 }, { timestamps: true });
 
 
