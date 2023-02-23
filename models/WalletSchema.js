@@ -15,7 +15,7 @@ WalletSchema.pre('save', async function (next) {
     if (this.isModified('user')) {
         const user = await model('User').findById(this.user);
         if (user) {
-            this.accountName = `${user.firstName} ${user.lastName} Wallet`;
+            this.accountName = `${user.firstName} ${user.lastName}`;
             this.accountNumber = getAcctNumberFromPhone(user.phoneNumber)
             next();
         } else {

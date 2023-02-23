@@ -37,8 +37,9 @@ exports.sendMoneyService = async function (status, amount, senderId, recipientAc
     session.startTransaction();
 
     try {
-        const sender = await WalletModel.findOne({ user: senderId }, { session });
-        const recipient = await WalletModel.findOne({ accountNumber: recipientAcctNumber }, { session });
+        const sender = await WalletModel.findOne({ user: senderId }, null, { session });
+        const recipient = await WalletModel.findOne({ accountNumber: recipientAcctNumber }, null, { session });
+        console.log(senderId)
 
         // check if sender has enough for the transaction
         if (sender.balanace < amountWithCharge) throw new Error('Insufficient balance');

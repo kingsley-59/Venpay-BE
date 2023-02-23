@@ -25,7 +25,7 @@ exports.createUserWithWallet = async (userData, valididAcctNumber) => {
         });
         delete newUser['password'];
         const newWallet = await WalletModel.create({
-            owner: newUser._id,
+            user: newUser._id,
             accountName: `${newUser.firstName} ${newUser.lastName}`,
             accountNumber: valididAcctNumber,
             session

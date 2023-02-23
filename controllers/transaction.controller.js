@@ -23,7 +23,7 @@ exports.sendMoneyController = async (req, res) => {
 
         res.status(200).json({ status: 'success', message: `Debit: ${data.amount} was sent to ${data.recipientAcctName}.` })
     } catch (error) {
-        res.status(500).json({ message: 'Transaction processing failed.' });
+        res.status(500).json({ message: `Transaction failed: ${error.message}` });
     }
 }
 
@@ -51,5 +51,14 @@ exports.topUpController = async (res, req) => {
  * @param {response} res 
  */
 exports.withdrawController = async (res, req) => {
+
+}
+
+/**
+ * 
+ * @param {request} req 
+ * @param {response} res 
+ */
+exports.generateBankAccount = async (res, req) => {
 
 }
