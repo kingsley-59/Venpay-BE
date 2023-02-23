@@ -5,6 +5,8 @@ const UserModel = require("../models/userSchema");
 const { hash, compare } = require("bcrypt");
 const { sign } = require("jsonwebtoken");
 const WalletModel = require("../models/WalletSchema");
+const { createUserWithWallet } = require("../services/walletService");
+const { getAcctNumberFromPhone } = require("../helpers/getAcctNumberFromPhone");
 
 
 const generateOTP = () => {
@@ -41,13 +43,16 @@ exports.googleVerify = async (req, res) => {
  * @param {response} res 
  */
 exports.register = async (req, res) => {
-    const { email, password, phoneNumber, firstName, lastName, gender } = req.body;
+    const { email, password, phoneNumber, firstName, lastName, address } = req.body;
+
+    let validAcctNumber;
+    try {
+        validAcctNumber = getAcctNumberFromPhone(phoneNumber);
+    } catch (error) {
+        return badRequestResponse(res, error.message);
+    }
 
     try {
-        // validate required fields
-        if (!email || !password || !phoneNumber) return badRequestResponse(res, 'email, password and phoneNumber is required');
-        if (firstName?.length < 3 || lastName?.length < 3) return badRequestResponse(res, 'first and last name must be 3 or more characters.');
-
         // check if email or phone number already exists
         const existingEmail = await UserModel.findOne({ email });
         const existingPhone = await UserModel.findOne({ phoneNumber });
@@ -57,16 +62,14 @@ exports.register = async (req, res) => {
         // hash password
         const passwordHash = await hash(password, 10);
 
-        // save user to database
-        const newUser = await UserModel.create({
-            firstName, lastName, email, phoneNumber, password: passwordHash, gender
-        })
+        const result = await createUserWithWallet({
+            email, firstName, lastName, password: passwordHash, phoneNumber, address
+        }, validAcctNumber)
 
-        const newWallet = await WalletModel.create({owner: newUser._id});
-
-        successResponse(res, {...newUser, password: '', wallet: newWallet});
+        successResponse(res, { ...result, password: '', });
     } catch (error) {
-        errorResponse(res, error);
+        console.log(error)
+        errorResponse(res, error?.message);
     }
 }
 
@@ -81,15 +84,15 @@ exports.login = async (req, res) => {
     try {
         if (!email || !password) return badRequestResponse(res, 'email and password is required');
 
-        const user = await UserModel.findOne({email});
+        const user = await UserModel.findOne({ email });
         if (!user) return notFoundResponse(res, 'user with this email not found');
 
         const passwordIsValid = compare(password, user.password);
         if (!passwordIsValid) return badRequestResponse(res, 'password does not match this email');
 
-        const token = sign({id: user._id, email: user.email, role: user.role}, process.env.JWT_SECRET, { expiresIn: '3d' })
+        const token = sign({ id: user._id, email: user.email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '3d' })
 
-        successResponse(res, {user: {...user, password: ''}, token});
+        successResponse(res, { user: { ...user.toObject(), password: '' }, token });
     } catch (error) {
         errorResponse(res, error)
     }

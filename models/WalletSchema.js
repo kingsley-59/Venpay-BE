@@ -1,20 +1,22 @@
 const { Schema, model } = require("mongoose");
+const { getAcctNumberFromPhone } = require("../helpers/getAcctNumberFromPhone");
 
 
 const WalletSchema = new Schema({
-    owner: { type: Schema.Types.ObjectId, ref: 'User' },
-    accountName: { type: String },
-    accountNumber: { type: Number },
+    user: { type: Schema.Types.ObjectId, ref: 'User' },
+    accountName: { type: String, required: [true, 'account name is required'] },
+    accountNumber: { type: Number, required: [true, 'account number required'], unique: true },
     balanace: { type: Number, default: 0 },
 }, { timestamps: true });
 
 
 // Set the default account name to be the concatenation of the user's first and last name
 WalletSchema.pre('save', async function (next) {
-    if (this.isNew || this.isModified('owner')) {
-        const user = await model('User').findById(this.owner);
+    if (this.isModified('user')) {
+        const user = await model('User').findById(this.user);
         if (user) {
             this.accountName = `${user.firstName} ${user.lastName} Wallet`;
+            this.accountNumber = getAcctNumberFromPhone(user.phoneNumber)
             next();
         } else {
             const err = new Error('User no longer exists.');

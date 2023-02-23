@@ -2,7 +2,7 @@ const { Schema, model } = require("mongoose");
 
 
 const TransactionSchema = new Schema({
-    type: {
+    category: {
         type: String,
         enum: ['send_money', 'receive_money', 'top_up', 'withdraw', 'transfer'],
         required: true
@@ -18,14 +18,15 @@ const TransactionSchema = new Schema({
         required: true
     },
     amount: { type: Number, required: true },
+    description: {type: String},
 
     senderAcctName: { type: String, required: true },
     senderAcctNumber: { type: Number, required: true },
     senderBank: { type: String, required: true, },
-    recipientName: { type: String, required: true },
+    recipientAcctName: { type: String, required: true },
     recipientAcctNumber: { type: Number, required: true },
     recipientBank: { type: String, required: true },
-    
+
 }, { timestamps: true });
 
 
@@ -40,4 +41,5 @@ TransactionSchema.pre('save', function (next) {
 });
 
 
-exports.TransactionModel = model('Transactions', TransactionSchema);
+const TransactionModel = model('Transactions', TransactionSchema);
+module.exports = TransactionModel;

@@ -3,9 +3,32 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+require('dotenv').config();
 
-var indexRouter = require('./routes');
-var authRouter = require('./routes/auth.routes');
+const indexRouter = require('./routes');
+const authRoutes = require('./routes/auth.routes');
+const userRoutes = require('./routes/user.routes');
+const TransactionRoutes = require('./routes/transaction.routes');
+
+// DB connection
+const MONGODB_URL = process.env.MONGODB_URL;
+const mongoose = require('mongoose');
+
+mongoose
+  .connect(MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then((conn) => {
+    //don't show the log when it is test
+    if (process.env.NODE_ENV !== 'test') {
+      console.log('\nConnected to %s', mongoose.connection.host);
+      console.log('App is running ... \n');
+      console.log('Press CTRL + C to stop the process. \n');
+    }
+  })
+  .catch((err) => {
+    console.error('App starting error:', err.message);
+    process.exit(1);
+  });
+
 
 var app = express();
 
@@ -20,7 +43,9 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/transactions', TransactionRoutes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

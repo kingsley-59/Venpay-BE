@@ -8,4 +8,5 @@ router.get('/:id', jwtVerifyToken, getUserById);
 router.put('/update/:id', jwtVerifyToken, updateProfile);
 router.delete('/:id', jwtVerifyToken, deleteUser);
 
-module.exports = router;
+const userRoutes = router;
+module.exports = userRoutes;
