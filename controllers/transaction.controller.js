@@ -1,6 +1,11 @@
 const { request, response } = require('express');
+const UserModel = require('../models/userSchema');
 const { sendMoneyService } = require('../services/transactionService');
-
+const flutterwave = require('flutterwave-node-v3');
+const { successResponse, errorResponse } = require('../helpers/apiResponse');
+const { generateRandomString } = require('../helpers/generateRandomString');
+const ReferenceModel = require('../models/referenceSchema');
+const flw = new flutterwave(process.env.FLW_PUBLIC_KEY, process.env.FLW_SECRET_KEY);
 
 function sendNotification() { }
 
@@ -32,7 +37,7 @@ exports.sendMoneyController = async (req, res) => {
  * @param {request} req 
  * @param {response} res 
  */
-exports.receiveMoneyController = async (res, req) => {
+exports.receiveMoneyController = async (req, res) => {
 
 }
 
@@ -41,7 +46,7 @@ exports.receiveMoneyController = async (res, req) => {
  * @param {request} req 
  * @param {response} res 
  */
-exports.topUpController = async (res, req) => {
+exports.topUpController = async (req, res) => {
 
 }
 
@@ -50,7 +55,7 @@ exports.topUpController = async (res, req) => {
  * @param {request} req 
  * @param {response} res 
  */
-exports.withdrawController = async (res, req) => {
+exports.withdrawController = async (req, res) => {
 
 }
 
@@ -59,6 +64,29 @@ exports.withdrawController = async (res, req) => {
  * @param {request} req 
  * @param {response} res 
  */
-exports.generateBankAccount = async (res, req) => {
+exports.generateVirtualAccount = async (req, res) => {
+    const userId = req.user?.id;
 
+    try {
+        const user = await UserModel.findById(userId);
+        const reference = `${user.firstName}-${generateRandomString()}`;
+        const newRef = await ReferenceModel.create({
+            user: user._id,
+            reference, active: true
+        })
+        const payload = {
+            email: user.email,
+            firstname: user.firstName,
+            lastname: user.lastName,
+            phonenumber: user.phoneNumber,
+            type: 'nuban',
+            currency: 'NGN',
+            is_permanent: false,
+            tx_ref: newRef.reference,
+        }
+        const { data } = await flw.VirtualAcct.create(payload);
+        successResponse(res, data);
+    } catch (error) {
+        errorResponse(res, error.message);
+    }
 }

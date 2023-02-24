@@ -6,9 +6,11 @@ var logger = require('morgan');
 require('dotenv').config();
 
 const indexRouter = require('./routes');
+const webhook = require('./routes/webhook');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const TransactionRoutes = require('./routes/transaction.routes');
+
 
 // DB connection
 const MONGODB_URL = process.env.MONGODB_URL;
@@ -43,6 +45,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
+app.use('/api/v1/webhook', webhook);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/transactions', TransactionRoutes);

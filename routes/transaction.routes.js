@@ -3,7 +3,6 @@ const { jwtVerifyToken } = require('../middlewares/jwtVerify');
 
 const router = require('express').Router();
 
-
 router.post('/send-money', jwtVerifyToken, sendMoneyController);
 
 

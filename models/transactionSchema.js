@@ -18,7 +18,8 @@ const TransactionSchema = new Schema({
         required: true
     },
     amount: { type: Number, required: true },
-    description: {type: String},
+    description: { type: String },
+    reference: { type: String, required: true },
 
     senderAcctName: { type: String, required: true },
     senderAcctNumber: { type: Number, required: true },

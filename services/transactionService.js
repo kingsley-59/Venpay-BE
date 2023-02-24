@@ -8,6 +8,7 @@ Recall, the transactions fall under 4 categories:
 'send_money', 'receive_money', 'top_up', 'withdraw', 'transfer'
 */
 
+const { generateRandomString } = require("../helpers/generateRandomString");
 const TransactionModel = require("../models/transactionSchema");
 const WalletModel = require("../models/WalletSchema");
 
@@ -61,7 +62,8 @@ exports.sendMoneyService = async function (status, amount, senderId, recipientAc
             recipientAcctName: recipient.accountName,
             recipientAcctNumber: recipient.accountName,
             recipientBank: process.env.BANK_NAME,
-            description
+            description,
+            reference: `${sender.accountName}-${generateRandomString()}`
         });
         newTransaction.save({ session });
 
