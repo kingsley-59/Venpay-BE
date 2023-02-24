@@ -15,6 +15,7 @@ const TransactionRoutes = require('./routes/transaction.routes');
 // DB connection
 const MONGODB_URL = process.env.MONGODB_URL;
 const mongoose = require('mongoose');
+const WalletRoutes = require('./routes/wallet.routes');
 
 mongoose
   .connect(MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -49,6 +50,7 @@ app.use('/api/v1/webhook', webhook);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/transactions', TransactionRoutes);
+app.use('/api/v1/wallet', WalletRoutes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

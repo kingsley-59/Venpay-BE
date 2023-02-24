@@ -1,10 +1,11 @@
-const { generateVirtualAccount } = require('../controllers/transaction.controller');
+const { getUserWallet } = require('../controllers/wallet.controller');
 const { jwtVerifyToken } = require('../middlewares/jwtVerify');
 
 const router = require('express').Router();
 
-router.get('/generate/virtual-acct', jwtVerifyToken, generateVirtualAccount);
+router.get('/', jwtVerifyToken, getUserWallet);
+router.get('/all');
 
 
 const WalletRoutes = router;
-module.exports = TransactionRoutes;
+module.exports = WalletRoutes;
