@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const UserModel = require("../models/userSchema");
 const WalletModel = require("../models/WalletSchema");
 
@@ -17,7 +18,7 @@ const WalletModel = require("../models/WalletSchema");
 exports.createUserWithWallet = async (userData, valididAcctNumber) => {
     const { firstName, lastName, email, phoneNumber, password, address } = userData;
 
-    const session = await UserModel.startSession();
+    const session = await mongoose.startSession();
     session.startTransaction();
     try {
         const newUser = await UserModel.create({
@@ -32,11 +33,11 @@ exports.createUserWithWallet = async (userData, valididAcctNumber) => {
         });
 
         session.commitTransaction();
-        session.endSession();
         return { ...newUser.toObject(), ...newWallet.toObject(), password: null, _id: null };
     } catch (error) {
         session.abortTransaction();
-        session.endSession();
         throw error;
+    } finally {
+        session.endSession();
     }
 }

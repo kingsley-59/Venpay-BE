@@ -8,6 +8,7 @@ Recall, the transactions fall under 4 categories:
 'send_money', 'receive_money', 'top_up', 'withdraw', 'transfer'
 */
 
+const { default: mongoose } = require("mongoose");
 const { generateRandomString } = require("../helpers/generateRandomString");
 const TransactionModel = require("../models/transactionSchema");
 const WalletModel = require("../models/WalletSchema");
@@ -27,6 +28,9 @@ class Categories {
     }
 }
 
+function creditOrDebit(type) {
+    return (type === 'top_up' || type === 'receive_money') ? 'credit' : 'debit';
+}
 
 
 exports.sendMoneyService = async function (status, amount, senderId, recipientAcctNumber, description = '', charge = 0, category = 'send_money') {
@@ -34,24 +38,26 @@ exports.sendMoneyService = async function (status, amount, senderId, recipientAc
     if (status !== 'success' && status !== 'failed') throw new Error('status must be either success or failed');
     if (amount < 1) throw new Error('Amount must be a valid integer');
 
-    const session = await TransactionModel.startSession();
+    const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
         const sender = await WalletModel.findOne({ user: senderId }, null, { session });
         const recipient = await WalletModel.findOne({ accountNumber: recipientAcctNumber }, null, { session });
-        console.log(senderId)
+        if (sender._id.toString() === recipient._id.toString()) throw new Error('You cannot send money to yourself;');
 
         // check if sender has enough for the transaction
         if (sender.balanace < amountWithCharge) throw new Error('Insufficient balance');
 
         //debit sender
-        const newSenderBalance = sender.balanace - amountWithCharge;
-        await WalletModel.findByIdAndUpdate(sender._id, { $set: { balanace: newSenderBalance } }, { new: true, session });
+        sender.balanace = sender.balanace - amountWithCharge;
+        let senderNewBal = (await sender.save({ session })).balanace;
+        console.log('The sender new balance:', senderNewBal);
 
         // credit recipient
-        const newRecipientBalance = recipient.balanace + amount
-        await WalletModel.findByIdAndUpdate(recipient._id, { $set: { balanace: newRecipientBalance } }, { session });
+        recipient.balanace = recipient.balanace + amount;
+        let recipientNewBal = (await recipient.save({ session })).balanace;
+        console.log('The recipient new balance:', recipientNewBal);
 
         // save transaction
         const newTransaction = new TransactionModel({
@@ -60,21 +66,22 @@ exports.sendMoneyService = async function (status, amount, senderId, recipientAc
             senderAcctNumber: sender.accountNumber,
             senderBank: process.env.BANK_NAME,
             recipientAcctName: recipient.accountName,
-            recipientAcctNumber: recipient.accountName,
+            recipientAcctNumber: recipient.accountNumber,
             recipientBank: process.env.BANK_NAME,
             description,
-            reference: `${sender.accountName}-${generateRandomString()}`
+            reference: `${sender.accountName}-${generateRandomString()}`,
+            transactionType: creditOrDebit()
         });
-        newTransaction.save({ session });
+        await newTransaction.save({ session });
 
         await session.commitTransaction();
-        session.endSession();
 
         return Object.freeze({ data: newTransaction });
     } catch (error) {
         await session.abortTransaction();
-        session.endSession();
         throw error
+    } finally {
+        session.endSession();
     }
 }
 

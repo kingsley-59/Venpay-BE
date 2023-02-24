@@ -31,15 +31,6 @@ const TransactionSchema = new Schema({
 }, { timestamps: true });
 
 
-// automatically set a transaciton as debit or credit
-TransactionSchema.pre('save', function (next) {
-    if (this.type === 'top_up' || this.type === 'receive_money') {
-        this.transactionType = 'credit';
-    } else {
-        this.transactionType = 'debit';
-    }
-    next();
-});
 
 
 const TransactionModel = model('Transactions', TransactionSchema);
