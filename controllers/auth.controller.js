@@ -7,14 +7,68 @@ const { sign } = require("jsonwebtoken");
 const WalletModel = require("../models/WalletSchema");
 const { createUserWithWallet } = require("../services/walletService");
 const { getAcctNumberFromPhone } = require("../helpers/getAcctNumberFromPhone");
+const { generate } = require("otp-generator");
+const { default: axios } = require("axios");
+require('dotenv').config();
 
 
-const generateOTP = () => {
-    return randomstring.generate({
-        length: 6,
-        charset: 'numeric',
-    });
-};
+/**
+ * 
+ * @param {request} req 
+ * @param {response} res 
+ */
+exports.generateOtp = async (req, res) => {
+    const { phoneNumber } = req.body;
+    try {
+        // const otp = generate(6);
+        // const hashedOtp = await hash(otp, 10);
+
+        const apiUrl = process.env.TERMII_API_URL + '/sms/otp/send';
+        const payload = {
+            api_key: process.env.TERMII_API_KEY,
+            message_type: 'NUMERIC',
+            to: phoneNumber,
+            from: 'Venpay',
+            channel: 'dnd',
+            pin_attempts: 10,
+            pin_time_to_live: 5,
+            pin_length: 6,
+            pin_placeholder: '< 1234 >',
+            message_text: 'Your pin is < 1234 >',
+            pin_type: 'NUMERIC'
+        };
+        const { data } = await axios.post(apiUrl, payload);
+        const { pinId, to, smsStatus } = data;
+        if (smsStatus !== 'Message sent') return errorResponse(res, `Failed to send otp to ${phoneNumber}`)
+
+        // res.cookie('otpHash', hashedOtp, { httpOnly: true, maxAge: 90000 });
+        res.cookie('phoneNumber', to, { httpOnly: true, maxAge: 90000 });
+        res.cookie('pinId', pinId, { httpOnly: true, maxAge: 90000 });
+        successResponse(res, { message: "Otp sent! Expires in 10mins." });
+    } catch (error) {
+        console.log(error);
+        errorResponse(res, (error?.response?.data?.message ?? error.message), error?.response.status ?? 500);
+    }
+}
+
+/**
+ * 
+ * @param {request} req 
+ * @param {response} res 
+ */
+exports.verifyOtp = async (req, res) => {
+    const { otp } = req.body;
+    try {
+        const otpHash = req.cookies.otpHash;
+        console.log(otpHash)
+        const otpIsCorrect = await compare(otp, otpHash);
+        if (!otpIsCorrect) return badRequestResponse(res, "Otp is invalid");
+
+        successResponse(res, 'Otp verified successfully.')
+    } catch (error) {
+        errorResponse(res, error.message);
+    }
+}
 
 /**
  * 
