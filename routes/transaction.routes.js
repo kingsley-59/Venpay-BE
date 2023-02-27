@@ -1,4 +1,4 @@
-const { sendMoneyController, generateVirtualAccount } = require('../controllers/transaction.controller');
+const { sendMoneyController, generateVirtualAccount, fundVirtualAccountWebhook, withdrawController } = require('../controllers/transaction.controller');
 const { jwtVerifyToken } = require('../middlewares/jwtVerify');
 
 const router = require('express').Router();
@@ -8,7 +8,10 @@ router.get('/ref/:reference', jwtVerifyToken);
 router.post('/send-money', jwtVerifyToken, sendMoneyController);
 router.post('/receive-money', jwtVerifyToken);
 router.post('/top-up/generate-acct', jwtVerifyToken, generateVirtualAccount);
-router.post('/withdraw')
+router.post('/withdraw', jwtVerifyToken, withdrawController);
+
+/** Webhook/Callback routes */
+router.post('/webhook', fundVirtualAccountWebhook);
 
 
 const TransactionRoutes = router;

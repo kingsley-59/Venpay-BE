@@ -6,16 +6,15 @@ var logger = require('morgan');
 require('dotenv').config();
 
 const indexRouter = require('./routes');
-const webhook = require('./routes/webhook');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const TransactionRoutes = require('./routes/transaction.routes');
-
+const WalletRoutes = require('./routes/wallet.routes');
+const BankRoutes = require('./routes/bank.routes');
 
 // DB connection
 const MONGODB_URL = process.env.MONGODB_URL;
 const mongoose = require('mongoose');
-const WalletRoutes = require('./routes/wallet.routes');
 
 mongoose
   .connect(MONGODB_URL, { useNewUrlParser: true, useUnifiedTopology: true })
@@ -46,11 +45,11 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/api/v1/webhook', webhook);
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/transactions', TransactionRoutes);
 app.use('/api/v1/wallet', WalletRoutes);
+app.use('/api/v1/banks', BankRoutes);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

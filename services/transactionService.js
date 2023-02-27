@@ -11,8 +11,12 @@ Recall, the transactions fall under 4 categories:
 const { default: mongoose } = require("mongoose");
 const { generateRandomString } = require("../helpers/generateRandomString");
 const TransactionModel = require("../models/transactionSchema");
+const UserModel = require("../models/userSchema");
 const WalletModel = require("../models/WalletSchema");
+const flutterwave = require('flutterwave-node-v3');
+require('dotenv').config();
 
+const flw = new flutterwave(process.env.FLW_PUBLIC_KEY, process.env.FLW_SECRET_KEY);
 
 class Categories {
     walletTransactions = [];
@@ -89,10 +93,65 @@ exports.receiveMoneyService = async function (senderId, recipientId) {
 
 }
 
-exports.topUpService = async function () {
+exports.topUpService = async function (userId) {
+    try {
+        const user = await UserModel.findById(userId);
 
+    } catch (error) {
+
+    }
 }
 
-exports.withdrawService = async function () {
+exports.withdrawService = async function ({ userId, amount, accountName, accountNumber, bankName, bankCode }) {
+    try {
+        // get user wallet
+        const wallet = await WalletModel.findOne({ user: userId });
 
+        // initiate transfer
+        const payload = {
+            "account_bank": bankCode, //This is the recipient bank code. Get list here :https://developer.flutterwave.com/v3.0/reference#get-all-banks
+            "account_number": accountNumber,
+            "amount": amount,
+            "narration": "",
+            "currency": "NGN",
+            "reference": generateRandomString(10), //This is a merchant's unique reference for the transfer, it can be used to query for the status of the transfer
+            "callback_url": "http://localhost:3000/webhook",
+            "debit_currency": "NGN"
+        }
+        const response = await flw.Transfer.initiate(payload);
+        console.log(response);
+        if (response.status === "success") {
+            const prevBal = wallet.balanace
+            wallet.balanace = wallet.balanace - amount;
+            await wallet.save();
+            console.log('Previous bal: ', prevBal);
+            console.log('Current Bal: ', wallet.balanace);
+        } else {
+            throw new Error(response.message)
+        };
+
+        // save transaction
+        const transaction = await TransactionModel.create({
+            category: 'withdraw',
+            transactionType: 'debit',
+            status: 'success',
+            amount,
+            reference: `${wallet.accountName}-${generateRandomString()}`,
+            senderAcctName: wallet.accountName,
+            senderAcctNumber: wallet.accountNumber,
+            senderBank: process.env.BANK_NAME,
+            recipientAcctName: accountName,
+            recipientAcctNumber: accountNumber,
+            recipientBank: bankName
+        });
+
+        // if transfer if successful, update user wallet
+        if (transaction) {
+            
+        }
+
+        return true;
+    } catch (error) {
+        throw error;
+    }
 }
