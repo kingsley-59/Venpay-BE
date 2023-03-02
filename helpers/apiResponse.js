@@ -10,7 +10,7 @@ const successResponse = (res, data, statusCode = 200) => {
 
 // Error Response
 const errorResponse = (res, message, statusCode = 500) => {
-    console.log(message, 'cyan')
+    console.log(message)
     res.status(statusCode).json({
         success: false,
         error: message

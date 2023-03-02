@@ -9,7 +9,12 @@ const { createUserWithWallet } = require("../services/walletService");
 const { getAcctNumberFromPhone } = require("../helpers/getAcctNumberFromPhone");
 const { generate } = require("otp-generator");
 const { default: axios } = require("axios");
+const { sendOtpWithTermii, verifyOtpWithTermii } = require("../services/smsService");
 require('dotenv').config();
+
+
+
+
 
 
 /**
@@ -20,43 +25,18 @@ require('dotenv').config();
 exports.generateOtp = async (req, res) => {
     const { phoneNumber } = req.body;
     try {
-        const otp = generate(6, {digits: true, specialChars: false});
-        const hashedOtp = await hash(otp, 10);
+        // check if phone number already exists
+        const user = await UserModel.findOne({phoneNumber});
+        if (user) return badRequestResponse(res, "Phone number already exists");
 
-        // const apiUrl = process.env.TERMII_API_URL + '/sms/otp/send';
-        const apiUrl = process.env.TERMII_API_URL + '/sms/send';
-        // const payload = {
-        //     api_key: process.env.TERMII_API_KEY,
-        //     message_type: 'NUMERIC',
-        //     to: phoneNumber,
-        //     from: 'Venpay',
-        //     channel: 'dnd',
-        //     pin_attempts: 10,
-        //     pin_time_to_live: 5,
-        //     pin_length: 6,
-        //     pin_placeholder: '< 1234 >',
-        //     message_text: 'Your pin is < 1234 >',
-        //     pin_type: 'NUMERIC'
-        // };
-        const payload = {
-            "to": "+2348141971579",
-            "from": "N-alert",
-            "sms": `Hi Kingsley ${otp} is your verification code Venpay.`,
-            "type": "plain",
-            "channel": "dnd",
-            "api_key": process.env.TERMII_API_KEY,
-        }
-        const { data } = await axios.post(apiUrl, payload);
-        const { pinId, to, smsStatus } = data;
-        if (smsStatus !== 'Message sent') return errorResponse(res, `Failed to send otp to ${phoneNumber}`)
+        // send otp to phone number
+        const { pinId, to } = await sendOtpWithTermii(phoneNumber);
+        if (!pinId || to !== phoneNumber) return errorResponse(res, `Failed to send otp to ${phoneNumber}`);
 
-        res.cookie('otpHash', hashedOtp, { httpOnly: true, maxAge: 90000 });
-        res.cookie('phoneNumber', to, { httpOnly: true, maxAge: 90000 });
-        res.cookie('pinId', pinId, { httpOnly: true, maxAge: 90000 });
-        successResponse(res, { message: "Otp sent! Expires in 10mins." });
+        res.cookie('termiiPinId', pinId, { httpOnly: true, maxAge: 90000 });
+        successResponse(res, { message: `Otp sent to this number: ${phoneNumber}` });
     } catch (error) {
-        console.log(error);
-        errorResponse(res, (error?.response?.data?.message ?? error.message), error?.response.status ?? 500);
+        errorResponse(res, (error?.response?.data?.message ?? error.message), error?.response?.status ?? 500);
     }
 }
 
@@ -68,14 +48,21 @@ exports.generateOtp = async (req, res) => {
 exports.verifyOtp = async (req, res) => {
     const { otp } = req.body;
     try {
-        const otpHash = req.cookies.otpHash;
-        console.log(otpHash)
-        const otpIsCorrect = await compare(otp, otpHash);
-        if (!otpIsCorrect) return badRequestResponse(res, "Otp is invalid");
+        const pinId = req.cookies.termiiPinId;
+        const { pin_id, verified, msisdn } = await verifyOtpWithTermii(otp, pinId);
+        if (!pin_id) return errorResponse(res, 'Failed to verify otp. Please try again');
+        console.log('cookie pin id: ', pinId);
+        console.log('response pin id: ', pin_id);
 
-        successResponse(res, 'Otp verified successfully.')
+        successResponse(res, { message: 'Otp verified successfully.', phoneNumber: msisdn });
     } catch (error) {
-        errorResponse(res, error.message);
+        console.log(error);
+        const respData = error?.response?.data;
+        if (respData?.verified === "Expired") {
+            return errorResponse(res, "Otp has expired! Please try again.", respData?.status);
+        } else if (respData?.verified === "Insufficient funds") {
+            return errorResponse(res, "Insuffiecient funds");
+        } else errorResponse(res, 'Something went wrong while verifying otp.');
     }
 }
 
