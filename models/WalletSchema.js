@@ -7,6 +7,7 @@ const WalletSchema = new Schema({
     accountName: { type: String, required: [true, 'account name is required'] },
     accountNumber: { type: Number, required: [true, 'account number required'], unique: true },
     balanace: { type: Number, default: 0 },
+    pinHash: { type: String }
 }, { timestamps: true });
 
 

@@ -22,3 +22,9 @@ exports.OTPGenerateSchema = Joi.object({
         strict: true
     })
 })
+
+exports.ChangePinSchema = Joi.object({
+    oldPin: Joi.number().min(4).max(4).required(),
+    newPin: Joi.number().min(4).max(4).required(),
+    retryNewPin: Joi.ref('newPin')
+})

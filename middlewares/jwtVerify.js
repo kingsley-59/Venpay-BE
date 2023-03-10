@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { unauthorizedResponse } = require('../helpers/apiResponse');
+const { unauthorizedResponse, errorResponse, forbiddenResponse } = require('../helpers/apiResponse');
 
 /**
  * 
@@ -20,4 +20,14 @@ exports.jwtVerifyToken = async (req, res, next) => {
     } catch (error) {
         unauthorizedResponse(res, 'Unathorized! Please log in.');
     }
+}
+
+exports.onlyAdmins = async (req, res, next) => {
+    const { role } = req?.user;
+
+    if (!role) return errorResponse(res, "user token must be verified first");
+
+    if (role !== 'admin' && role !== 'superadmin') return forbiddenResponse(res, 'Thos resource is accessible to admins only');
+
+    next();
 }
