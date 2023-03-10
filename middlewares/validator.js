@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const JoiWithPhone = Joi.extend(require('joi-phone-number'));
 
 
 exports.RegisterSchema = Joi.object({
@@ -8,4 +9,11 @@ exports.RegisterSchema = Joi.object({
     password: Joi.string(),
     address: Joi.string(),
     phoneNumber: Joi.string().min(10).max(14)
+})
+
+exports.OTPGenerateSchema = Joi.object({
+    phoneNumber: Joi.string().phoneNumber({
+        defaultCountry: 'NG',
+        format: 'e164'
+    })
 })

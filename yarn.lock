@@ -1912,6 +1912,11 @@ google-auth-library@^8.7.0:
     jws "^4.0.0"
     lru-cache "^6.0.0"
 
+google-libphonenumber@3.2.27:
+  version "3.2.27"
+  resolved "https://registry.yarnpkg.com/google-libphonenumber/-/google-libphonenumber-3.2.27.tgz#06a0c1d42be712a6fd4189e2e3b07fc36cacee01"
+  integrity sha512-et3QlrfWemNPhyUfXZmJG8TfzitfAN71ygNI15+B35zNge/7vyZxkpDsc13oninkf8RAtN2kNEzvMr4L1n3vfQ==
+
 google-p12-pem@^4.0.0:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/google-p12-pem/-/google-p12-pem-4.0.1.tgz#82841798253c65b7dc2a4e5fe9df141db670172a"
@@ -2268,6 +2273,13 @@ isstream@~0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/isstream/-/isstream-0.1.2.tgz#47e63f7af55afa6f92e1500e690eb8b8529c099a"
   integrity sha512-Yljz7ffyPbrLpLngrMtZ7NduUgVvi6wG9RJ9IUcyCd59YQ911PBJphODUcbOVbqYfxe1wuYf/LJ8PauMRwsM/g==
+
+joi-phone-number@^5.1.1:
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/joi-phone-number/-/joi-phone-number-5.1.1.tgz#e61d2303492a970b15edecde48a49a66f7692790"
+  integrity sha512-sCrH/GP5ShkPTW8jVQXxAVxvgHZ1CQTmAvIp0JGEUaGsPAY5l+ByapIwNJlVsY7LPtCDZW996o5R66+W0nk9qQ==
+  dependencies:
+    google-libphonenumber "3.2.27"
 
 joi@^17.8.3:
   version "17.8.3"

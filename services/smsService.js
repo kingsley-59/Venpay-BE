@@ -44,15 +44,16 @@ exports.sendOtpWithTermii = async function(phoneNumber) {
     else return false;
 }
 
-exports.verifyOtpWithTermii = async function(pin, pinId) {
+exports.verifyOtpWithTermii = async function(pin, clientPinId) {
     const apiUrl = process.env.TERMII_API_URL + '/sms/otp/verify';
     const payload = {
         api_key: process.env.TERMII_API_KEY,
-        pin_id: pinId,
+        pin_id: clientPinId,
         pin
     };
     const { data } = await axios.post(apiUrl, payload);
-    const { pinId: pin_id, verified, msisdn } = data;
-    if (verified === "True") return { pin_id, verified, msisdn };
+    console.log(data);
+    const { pinId, verified, msisdn } = data;
+    if (verified) return { pinId, verified, msisdn };
     else return false;
 }

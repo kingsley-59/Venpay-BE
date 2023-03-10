@@ -1,6 +1,6 @@
 const { googleVerifyToken } = require("../middlewares/googleAuth")
 const { request, response } = require('express');
-const { badRequestResponse, successResponse, errorResponse, notFoundResponse } = require("../helpers/apiResponse");
+const { badRequestResponse, successResponse, errorResponse, notFoundResponse, unauthorizedResponse } = require("../helpers/apiResponse");
 const UserModel = require("../models/userSchema");
 const { hash, compare } = require("bcrypt");
 const { sign } = require("jsonwebtoken");
@@ -47,17 +47,27 @@ exports.generateOtp = async (req, res) => {
  */
 exports.verifyOtp = async (req, res) => {
     const { otp } = req.body;
+    const cookiePinId = req.cookies?.termiiPinId;
+
     try {
-        const pinId = req.cookies.termiiPinId;
-        const { pin_id, verified, msisdn } = await verifyOtpWithTermii(otp, pinId);
-        if (!pin_id) return errorResponse(res, 'Failed to verify otp. Please try again');
-        console.log('cookie pin id: ', pinId);
-        console.log('response pin id: ', pin_id);
+        // verify otp and pinId from http cookie
+        if (!cookiePinId) return badRequestResponse(res, "Otp verification timeout, please try again");
+
+        const { pinId, verified, msisdn } = await verifyOtpWithTermii(otp, cookiePinId);
+        
+        if (!pinId) return errorResponse(res, 'Failed to verify otp. Please try again');
+        if (pinId !== cookiePinId) return badRequestResponse(res, "This otp is not for this client device");
+
+        console.log('cookie pin id: ', cookiePinId);
+        console.log('response pin id: ', pinId);
+        if (verified !== true) return unauthorizedResponse(res, "Invalid OTP");
 
         successResponse(res, { message: 'Otp verified successfully.', phoneNumber: msisdn });
     } catch (error) {
         console.log(error);
         const respData = error?.response?.data;
+        res.cookie('termiiPinId', cookiePinId, { httpOnly: true, maxAge: 90000 });
+
         if (respData?.verified === "Expired") {
             return errorResponse(res, "Otp has expired! Please try again.", respData?.status);
         } else if (respData?.verified === "Insufficient funds") {
