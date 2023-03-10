@@ -8,7 +8,11 @@ exports.RegisterSchema = Joi.object({
     email: Joi.string().email({ minDomainSegments: 2, tlds: { allow: ['com', 'net'] } }),
     password: Joi.string(),
     address: Joi.string(),
-    phoneNumber: Joi.string().min(10).max(14)
+    phoneNumber: JoiWithPhone.string().phoneNumber({
+        defaultCountry: 'NG',
+        format: 'e164',
+        strict: true
+    })
 })
 
 exports.OTPGenerateSchema = Joi.object({

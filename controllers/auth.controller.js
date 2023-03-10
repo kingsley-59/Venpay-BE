@@ -59,13 +59,10 @@ exports.verifyOtp = async (req, res) => {
         if (!pinId) return errorResponse(res, 'Failed to verify otp. Please try again');
         if (pinId !== cookiePinId) return badRequestResponse(res, "This otp is not for this client device");
 
-        console.log('cookie pin id: ', cookiePinId);
-        console.log('response pin id: ', pinId);
         if (verified !== true) return unauthorizedResponse(res, "Invalid OTP");
 
         successResponse(res, { message: 'Otp verified successfully.', phoneNumber: msisdn });
     } catch (error) {
-        console.log(error);
         const respData = error?.response?.data;
         res.cookie('termiiPinId', cookiePinId, { httpOnly: true, maxAge: 90000 });
 
@@ -129,7 +126,6 @@ exports.register = async (req, res) => {
 
         successResponse(res, { ...result, password: '', });
     } catch (error) {
-        console.log(error)
         errorResponse(res, error?.message);
     }
 }
