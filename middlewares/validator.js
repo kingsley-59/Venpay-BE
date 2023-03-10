@@ -12,8 +12,9 @@ exports.RegisterSchema = Joi.object({
 })
 
 exports.OTPGenerateSchema = Joi.object({
-    phoneNumber: Joi.string().phoneNumber({
+    phoneNumber: JoiWithPhone.string().phoneNumber({
         defaultCountry: 'NG',
-        format: 'e164'
+        format: 'e164',
+        strict: true
     })
 })

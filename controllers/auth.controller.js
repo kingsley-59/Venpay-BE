@@ -24,6 +24,7 @@ require('dotenv').config();
  */
 exports.generateOtp = async (req, res) => {
     const { phoneNumber } = req.body;
+
     try {
         // check if phone number already exists
         const user = await UserModel.findOne({phoneNumber});
@@ -54,7 +55,7 @@ exports.verifyOtp = async (req, res) => {
         if (!cookiePinId) return badRequestResponse(res, "Otp verification timeout, please try again");
 
         const { pinId, verified, msisdn } = await verifyOtpWithTermii(otp, cookiePinId);
-        
+
         if (!pinId) return errorResponse(res, 'Failed to verify otp. Please try again');
         if (pinId !== cookiePinId) return badRequestResponse(res, "This otp is not for this client device");
 
