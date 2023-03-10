@@ -33,10 +33,10 @@ exports.getAllUserWallets = async (req, res) => {
  */
 exports.changeTransactionPin = async (req, res) => {
     const { id } = req.user;
-    const { oldPin, newPin, retryNewPin } = req.body;
+    const { oldPin, newPin } = req.body;
 
     try {
-        const wallet = await WalletModel.findById(id);
+        const wallet = await WalletModel.findOne({user: id});
         if (!wallet.pinHash) return badRequestResponse(res, "You have not set a transaction pin.");
         const isVerified = await compare(oldPin, wallet?.pinHash);
         if (!isVerified) return unauthorizedResponse(res, "Incorrect pin! Please check the pin and try again");
@@ -56,7 +56,8 @@ exports.setTransactionPin = async (req, res) => {
     const { pin } = req.body;
     
     try {
-        const wallet = await WalletModel.findById(id);
+        const wallet = await WalletModel.findOne({user: id});
+        if (!wallet) return badRequestResponse(res, "Wallet does not exist");
         wallet.pinHash = await hash(pin, 10);
         await wallet.save();
 

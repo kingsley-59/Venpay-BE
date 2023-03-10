@@ -23,8 +23,13 @@ exports.OTPGenerateSchema = Joi.object({
     })
 })
 
+exports.CreatePinSchema = Joi.object({
+    pin: Joi.string().min(4).max(4).required(),
+    retryPin: Joi.ref('pin')
+})
+
 exports.ChangePinSchema = Joi.object({
-    oldPin: Joi.number().min(4).max(4).required(),
-    newPin: Joi.number().min(4).max(4).required(),
+    oldPin: Joi.string().min(4).max(4).required(),
+    newPin: Joi.string().min(4).max(4).required(),
     retryNewPin: Joi.ref('newPin')
 })
