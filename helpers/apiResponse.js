@@ -3,6 +3,7 @@
 // Success Response
 const successResponse = (res, data, statusCode = 200) => {
     res.status(statusCode).json({
+        statusCode,
         success: true,
         data
     });
@@ -12,6 +13,7 @@ const successResponse = (res, data, statusCode = 200) => {
 const errorResponse = (res, message, statusCode = 500) => {
     console.log(message)
     res.status(statusCode).json({
+        statusCode,
         success: false,
         error: message
     });
