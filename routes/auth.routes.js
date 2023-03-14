@@ -5,7 +5,7 @@ require('dotenv').config();
 const validator = require('express-joi-validation').createValidator({});
 
 
-router.get('/generate-otp', validator.body(OTPGenerateSchema), generateOtp);
+router.post('/generate-otp', validator.body(OTPGenerateSchema), generateOtp);
 router.post('/verify-otp', verifyOtp);
 router.post('/register', validator.body(RegisterSchema), register);
 router.post('/login', login);
